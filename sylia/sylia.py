@@ -131,9 +131,9 @@ class Clock:
     def delay():
         Sylia.clock.tick(Sylia.framerate)
 
-class Polygon:
+class Shape:
 
-    def square(position, dimensions, colour):
+    def rectangle(position, dimensions, colour):
         x = position[0]
         y = position[1]
         w = dimensions[0]
@@ -141,6 +141,15 @@ class Polygon:
 
         rect = pygame.Rect(x, y, w, h)
         pygame.draw.rect(Sylia.surface, colour, rect)
+
+    def circle(position, diameter, colour):
+        if(diameter == 0):
+            return
+
+        pygame.draw.circle(Sylia.surface, colour, position, radius=diameter/2)
+
+    def polygon(points, colour):
+        pygame.draw.polygon(Sylia.surface, colour, points=points)
 
 class Image:
     
@@ -364,7 +373,7 @@ class Duck:
                     Sylia.surface.blit(sprite, rect)
 
                 else:
-                    Polygon.square([Duck.position[0] - Duck.size*25, Duck.position[1] - Duck.size*25], [Duck.size*50, Duck.size*50], (255, 255, 0))
+                    Shape.rectangle([Duck.position[0] - Duck.size*25, Duck.position[1] - Duck.size*25], [Duck.size*50, Duck.size*50], (255, 255, 0))
 
     def getPosX():
         return Duck.position[0]
@@ -419,6 +428,7 @@ def init():
     Sylia.init()
 
 def running():
+    sylia.clock.delay()
     return Sylia._running
 
 #Dummy Class
@@ -426,7 +436,7 @@ class sylia:
 
     duck = Duck
     clock = Clock
-    polygon = Polygon
+    shape = Shape
     image = Image
     sound = Sound
     key = Key
