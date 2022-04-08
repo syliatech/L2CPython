@@ -48,12 +48,6 @@ class Sylia:
                 key = pygame.key.name(event.key)
                 Key.down(key)
 
-                if(key in Key._callback.keys()):
-                    if(Key._callback[key][1] == None):
-                        Key._callback[key][0]()
-                    else:
-                        Key._callback[key][0](Key._callback[key][1])
-
             if event.type == pygame.KEYUP:
                 key = pygame.key.name(event.key)
                 Key.up(key)
@@ -151,42 +145,88 @@ class Shape:
     def polygon(points, colour):
         pygame.draw.polygon(Sylia.surface, colour, points=points)
 
-class Image:
-    
+class RenderObject:
+
     id = 0
 
-    class RenderObject:
+    def __init__(self, image, rect, file):
+        self.file = file
+        self.image = image
+        self.rect = rect
+        self.id = RenderObject.id
+        self.angle = 0
+        self.size = None
+        RenderObject.id += 1
 
-        id = 0
+    def setPosition(self, position):
+        self.rect.center = position
 
-        def __init__(self, image, rect, file):
-            self.file = file
-            self.image = image
-            self.rect = rect
-            self.id = Image.id
-            self.angle = 0
-            self.size = 1
-            Image.id += 1
+    def setRotation(self, angle):
+        self.angle = angle
 
-        def setPosition(self, position):
-            self.rect.center = position
+    def setScale(self, size):
+        if(len(size) != 2):
+            raise Exception("Error: size expects an array with two elements [width, height]")
+        self.size = size
 
-        def setRotation(self, angle):
-            self.angle = angle
+    def render(self):
+        # Check if image is scaled (otherwise do not scale)
+        if(self.size):
+            self.image = pygame.transform.scale(self.image, (int(self.rect.width*self.size[0]), int(self.rect.height*self.size[1])))
+        self.image = pygame.transform.rotate(self.image, self.angle)
+        Sylia.surface.blit(self.image, self.rect)
 
-        def setScale(self, size):
-            self.size = size
+class Text:
+    
+    fonts = {}
 
-        def render(self):
-            self.image = pygame.transform.scale(self.image, (int(self.size*50), int(self.size*50)))
-            self.image = pygame.transform.rotate(self.image, self.angle)
-            Sylia.surface.blit(self.image, self.rect)
+    # Will load a custom font into fonts dictionary
+    def __loadFont(fontName, size, fontFile):
+
+        #Check if we have already loaded font
+        if(fontName in Text.fonts.keys()):
+            return Text.fonts[key]
+
+        if(fontFile):
+            file_location = "{}".format(fontFile)
+            font = pygame.font.Font(file_location, size)
+        else:
+            font = pygame.font.SysFont(fontName, size)
+
+        key = fontName + "_" + str(size)
+
+        Text.fonts[key] = font
+        return font
+
+    # Creates text element, takes a font and size as an argument
+    def create(fontName, size, text, colour=(0, 0, 0), anti_alias=False, fontFile=None):
+
+        font = Text.__loadFont(fontName, size, fontFile)
+        textObj = font.render(text, anti_alias, colour)
+        rect = textObj.get_rect()
+        renderobject = RenderObject(textObj, rect, text)
+        return renderobject
+
+    """Actually handles the drawing of the image, called only internally by Sylia"""
+    def __draw__(renderobject):
+        renderobject.render()
+
+    """Public draw function, adds to list for Sylia to draw"""
+    def draw(renderobject):
+
+        Sylia.drawLock.acquire()
+        if(renderobject.id not in Sylia.draw_list.keys()):
+            Sylia.draw_list[renderobject.id] = renderobject
+        Sylia.drawLock.release()
+
+
+class Image:
 
     def load(imgfile):
         file_location = "{}".format(imgfile)
         image = pygame.image.load(file_location)
         rect = image.get_rect()
-        renderobject = Image.RenderObject(image, rect, imgfile)
+        renderobject = RenderObject(image, rect, imgfile)
         return renderobject
 
     """Actually handles the drawing of the image, called only internally by Sylia"""
@@ -218,7 +258,6 @@ class Sound:
 
 class Key:
     keys = {}
-    _callback = {}
 
     def up(keyname):
         Key.keys[keyname] = False
@@ -234,9 +273,6 @@ class Key:
             return True
         else:
             return False
-
-    def callback(func, keyname, args=None):
-        Key._callback[keyname] = [func, args]
 
 class Mouse:
 
@@ -259,11 +295,6 @@ class Mouse:
 
     def position():
         return pygame.mouse.get_pos()
-
-
-class Random:
-    def number(max, min=0):
-        return random.randint(min, max)
 
 class Duck:
 
@@ -438,8 +469,8 @@ class sylia:
     clock = Clock
     shape = Shape
     image = Image
+    text = Text
     sound = Sound
     key = Key
     mouse = Mouse
-    random = Random
     running = running
