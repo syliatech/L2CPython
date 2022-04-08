@@ -1,4 +1,3 @@
-import random
 import pygame, math, threading, sys
 from copy import deepcopy
 pygame.init()
@@ -125,37 +124,18 @@ class Clock:
     def delay():
         Sylia.clock.tick(Sylia.framerate)
 
-class Shape:
-
-    def rectangle(position, dimensions, colour):
-        x = position[0]
-        y = position[1]
-        w = dimensions[0]
-        h = dimensions[1]
-
-        rect = pygame.Rect(x, y, w, h)
-        pygame.draw.rect(Sylia.surface, colour, rect)
-
-    def circle(position, diameter, colour):
-        if(diameter == 0):
-            return
-
-        pygame.draw.circle(Sylia.surface, colour, position, radius=diameter/2)
-
-    def polygon(points, colour):
-        pygame.draw.polygon(Sylia.surface, colour, points=points)
-
 class RenderObject:
 
     id = 0
 
-    def __init__(self, image, rect, file):
+    def __init__(self, image, rect, file, primative=False):
         self.file = file
         self.image = image
         self.rect = rect
         self.id = RenderObject.id
         self.angle = 0
         self.size = None
+        self.primative = primative
         RenderObject.id += 1
 
     def setPosition(self, position):
@@ -170,11 +150,137 @@ class RenderObject:
         self.size = size
 
     def render(self):
-        # Check if image is scaled (otherwise do not scale)
+        # Check if we are dealing with a primative (ie a shape)
+        if(self.primative):
+            self.image.draw() #use the primative inbuilt draw() method
+            return
+        # Check if image is scaled (otherwise do not scale)  
         if(self.size):
             self.image = pygame.transform.scale(self.image, (int(self.rect.width*self.size[0]), int(self.rect.height*self.size[1])))
         self.image = pygame.transform.rotate(self.image, self.angle)
         Sylia.surface.blit(self.image, self.rect)
+
+class Shape:
+
+    class Rectangle:
+        def __init__(self, position, dimensions, colour):
+            x = position[0]
+            y = position[1]
+            w = dimensions[0]/2
+            h = dimensions[1]/2
+            self.position = position
+            self.dimensions = dimensions
+            self.scale = [1, 1] #Scale the shape in both directions
+            self.extend = [0, 0, 0, 0] #Extend a particular face in that direction
+            self.angle = 0
+            self.colour = colour
+            self.points = [[x-w,y-h], [x+w, y-h], [x+w, y+h], [x-w, y+h]]
+            self.renderObject = RenderObject(self, None, 'primative-rectangle', True)
+
+        # Used by rotate to create shape at (0, 0) prior to applying translation
+        def __build_zero_shape(self):
+            x = 0
+            y = 0
+            w = self.dimensions[0]/2*self.scale[0]
+            h = self.dimensions[1]/2*self.scale[1]
+
+            # Take extended sides into account
+            wl = -(w+self.extend[0])
+            wr = w+self.extend[1]
+            ht = -(h+self.extend[2])
+            hb = h+self.extend[3]
+
+            return [[x+wl,y+ht], [x+wr, y+ht], [x+wr, y+hb], [x+wl, y+hb]]
+
+        # Used to apply position translation once rotation has occured
+        def __translate(self, points):
+            for i in range(len(self.points)):
+               points[i][0] += self.position[0]
+               points[i][1] += self.position[1]
+
+        def setPosition(self, position):
+           offset = [position[0] - self.position[0], self.position[1] - position[1]]
+           self.position = position
+
+           for i in range(len(self.points)):
+               self.points[i][0] += offset[0]
+               self.points[i][1] += offset[1]
+
+        def setScale(self, dimensions):
+            self.scale = [dimensions[0]/self.dimensions[0], dimensions[1]/self.dimensions[1]]
+            self.dimensions = dimensions
+
+            for i in range(len(self.points)):
+                self.points[i][0] *= self.scale[0]
+                self.points[i][1] *= self.scale[1]
+
+        def setExtended(self, side, amount):
+            if(side == 'left'):
+                self.extend[0] = amount
+            elif(side == 'right'):
+                self.extend[1] = amount
+            elif(side == 'top'):
+                self.extend[2] = amount
+            elif(side == 'bottom'):
+                self.extend[3] = amount
+            else:
+                raise Exception("Error: setExtend expects side argument for rectangle to be: 'left', 'right', 'top' or 'bottom'. {} is not a side".format(side))
+
+            #Update everything
+            self.setAngle(self.angle)
+
+        def setAngle(self, angle):
+            self.angle = angle
+
+            zpoints = self.__build_zero_shape()
+
+            for i in range(len(self.points)):
+                x1 = zpoints[i][0]
+                y1 = zpoints[i][1]
+                zpoints[i][0] = (math.cos(angle)*x1) - (math.sin(angle)*y1)
+                zpoints[i][1] = (math.sin(angle)*x1) + (math.cos(angle)*y1)
+
+            self.__translate(zpoints)
+            self.points = list(zpoints)
+
+        def draw(self):
+            pygame.draw.polygon(Sylia.surface, self.colour, self.points)
+
+    class Circle:
+        def __init__(self, position, diameter, colour):
+            self.position = position
+            self.colour = colour
+            self.diameter = diameter
+            self.renderObject = RenderObject(self, None, 'primative-circle', True)
+
+        def setDiameter(self, diameter):
+            self.diameter = diameter
+
+        def setPosition(self, position):
+            self.position = position
+
+        def draw(self):
+            pygame.draw.circle(Sylia.surface, self.colour, self.position, radius=self.diameter/2)
+
+
+    def rectangle(position, dimensions, colour):
+        rect = Shape.Rectangle(position, dimensions, colour)
+        return rect
+
+    def circle(position, diameter, colour):
+        round_thing = Shape.Circle(position, diameter, colour)
+        return round_thing
+
+    def polygon(points, colour):
+        pygame.draw.polygon(Sylia.surface, colour, points=points)
+
+        """Public draw function, adds to list for Sylia to draw"""
+    def draw(primativeObject):
+        renderobject = primativeObject.renderObject
+        Sylia.drawLock.acquire()
+        if(renderobject.id not in Sylia.draw_list.keys()):
+            Sylia.draw_list[renderobject.id] = renderobject
+        Sylia.drawLock.release()
 
 class Text:
     
@@ -199,12 +305,13 @@ class Text:
         return font
 
     # Creates text element, takes a font and size as an argument
-    def create(fontName, size, text, colour=(0, 0, 0), anti_alias=False, fontFile=None):
+    def create(fontName, size, text, position, colour=(0, 0, 0), anti_alias=False, fontFile=None):
 
         font = Text.__loadFont(fontName, size, fontFile)
         textObj = font.render(text, anti_alias, colour)
         rect = textObj.get_rect()
         renderobject = RenderObject(textObj, rect, text)
+        renderobject.setPosition(position)
         return renderobject
 
     """Actually handles the drawing of the image, called only internally by Sylia"""
