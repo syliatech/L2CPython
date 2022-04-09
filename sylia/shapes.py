@@ -24,7 +24,7 @@ class Shape:
             self.renderObject = RenderObject(self, None, 'primative-rectangle', True)
 
         # Used by rotate to create shape at (0, 0) prior to applying translation
-        def __build_zero_shape(self):
+        def build_zero_shape(self):
             x = 0
             y = 0
             w = self.dimensions[0]/2*self.scale[0]
@@ -39,7 +39,7 @@ class Shape:
             return [[x+wl,y+ht], [x+wr, y+ht], [x+wr, y+hb], [x+wl, y+hb]]
 
         # Used to apply position translation once rotation has occured
-        def __translate(self, points):
+        def translate(self, points):
             for i in range(len(self.points)):
                points[i][0] += self.position[0]
                points[i][1] += self.position[1]
@@ -78,7 +78,7 @@ class Shape:
         def setAngle(self, angle):
             self.angle = math.radians(angle)
 
-            zpoints = self.__build_zero_shape()
+            zpoints = self.build_zero_shape()
 
             for i in range(len(self.points)):
                 x1 = zpoints[i][0]
@@ -86,7 +86,7 @@ class Shape:
                 zpoints[i][0] = (math.cos(self.angle)*x1) - (math.sin(self.angle)*y1)
                 zpoints[i][1] = (math.sin(self.angle)*x1) + (math.cos(self.angle)*y1)
 
-            self.__translate(zpoints)
+            self.translate(zpoints)
             self.points = list(zpoints)
 
         def draw(self):
@@ -107,6 +107,54 @@ class Shape:
 
         def draw(self):
             pygame.draw.circle(Shape.surface, self.colour, self.position, radius=self.diameter/2)
+
+    class Triangle(Rectangle):
+        def __init__(self, position, radius, colour):
+            self.position = position
+            self.radius = radius
+            self.colour = colour
+            self.extend = [0, 0, 0]
+            self.scale = 1
+
+            r = radius
+            x = position[0]
+            y = position[1]
+            rx1 = r*math.cos(math.radians(210))
+            ry1 = r*math.sin(math.radians(210))
+            rx2 = r*math.cos(math.radians(330))
+            ry2 = r*math.sin(math.radians(330))                 
+            self.points = [[x, y+r], [x+rx1, y+ry1], [x+rx2, y+ry2]]
+
+        def build_zero_shape(self):
+            r = self.radius
+            x = 0
+            y = 0
+
+            ext = self.extend[0]
+            exl = self.extend[1]
+            exr = self.extend[2]
+
+            rx1 = (r+exl)*math.cos(math.radians(210))
+            ry1 = (r+exl)*math.sin(math.radians(210))
+            rx2 = (r+exr)*math.cos(math.radians(330))
+            ry2 = (r+exr)*math.sin(math.radians(330))
+
+            return [[x, y+r+ext], [x+rx1, y+ry1], [x+rx2, y+ry2]]
+
+        def setScale(self, scale):
+            self.radius = self.radius*(scale/self.scale)
+
+            self.setAngle(self.angle)
+
+        def setExtended(self, side, amount):
+            if(side == "top"):
+                self.extend[0] = amount
+            elif(side == "left"):
+                self.extend[1] = amount
+            elif(side == "right"):
+                self.extend[2] = amount
+            else:
+                raise Exception("Error: setExtend expects side argument for rectangle to be: 'left', 'right' or 'top'. {} is not a side".format(side))
 
     # This is called internally
     def init(surface, drawLock, drawList):

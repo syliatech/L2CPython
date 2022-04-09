@@ -1,5 +1,5 @@
 from .sylia import Clock as clock, init
-from .sylia import Sound as sound, Key as key, Mouse as mouse, running
+from .sylia import Sound as sound, Key as key, Mouse as mouse, running, setBackgroundColour
 
 from .image import Image as image
 from .shapes import Shape as shape

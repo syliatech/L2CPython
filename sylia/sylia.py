@@ -10,10 +10,11 @@ class Sylia:
 
     _running = True
     surface = None
-    width = 800
-    height = 600
+    width = None
+    height = None
     clock = None
     renderclock = None
+    background_colour = (0, 0, 0)
     framerate = 60 # there are two different framerates to stop flickering
     renderrate = framerate/2 # a framerate of 30
     draw_list = {}
@@ -29,11 +30,12 @@ class Sylia:
         def run(self):
             self.func()
 
-    def init():
+    def init(screenSize):
         Sylia.clock = pygame.time.Clock()
         Sylia.renderclock = pygame.time.Clock()
-        windowsize = (Sylia.width, Sylia.height)
-        Sylia.surface = pygame.display.set_mode(windowsize)
+        Sylia.width = screenSize[0]
+        Sylia.height = screenSize[1]
+        Sylia.surface = pygame.display.set_mode(screenSize)
 
         # Init RenderObject
         RenderObject.init(Sylia.surface)
@@ -89,11 +91,11 @@ class Sylia:
     def loop():
         Sylia.events()
         pygame.display.update()
-        Sylia.surface.fill((0,0,0))
+        Sylia.surface.fill(Sylia.background_colour)
 
         Sylia.drawLock.acquire()
         for renderobject in Sylia.draw_list.values():
-            Image.__draw__(renderobject)
+            renderobject.render()
         Sylia.drawLock.release()
 
         Sylia.draw_list.clear()
@@ -200,12 +202,15 @@ class Mouse:
     def position():
         return pygame.mouse.get_pos()
 
-def init():
-    Sylia.init()
+def init(screenSize):
+    Sylia.init(screenSize)
 
 def running():
     sylia.clock.delay()
     return Sylia._running
+
+def setBackgroundColour(colour):
+    Sylia.background_colour = colour
 
 #Dummy Class
 class sylia:
@@ -219,3 +224,4 @@ class sylia:
     key = Key
     mouse = Mouse
     running = running
+    setBackgroundColour = setBackgroundColour

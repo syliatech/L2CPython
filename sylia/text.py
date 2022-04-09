@@ -42,10 +42,6 @@ class Text:
         renderobject.setPosition(position)
         return renderobject
 
-    """Actually handles the drawing of the image, called only internally by Sylia"""
-    def __draw__(renderobject):
-        renderobject.render()
-
     """Public draw function, adds to list for Sylia to draw"""
     def draw(renderobject):
 
