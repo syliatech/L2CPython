@@ -1,4 +1,4 @@
-import pygame, math, threading, sys
+import pygame, math, threading, sys, os
 from sylia.renderobject import RenderObject
 from sylia.shapes import Shape
 from sylia.image import Image
@@ -19,6 +19,8 @@ class Sylia:
     renderrate = framerate/2 # a framerate of 30
     draw_list = {}
     drawLock = threading.Lock()
+    title = None
+    icon = None
 
     class SThread(threading.Thread):
         def __init__(self, threadID, name, func):
@@ -30,12 +32,17 @@ class Sylia:
         def run(self):
             self.func()
 
-    def init(screenSize):
+    def init(screenSize, title, icon):
+        Sylia.title = title
+        Sylia.icon = icon
+
         Sylia.clock = pygame.time.Clock()
         Sylia.renderclock = pygame.time.Clock()
         Sylia.width = screenSize[0]
         Sylia.height = screenSize[1]
         Sylia.surface = pygame.display.set_mode(screenSize)
+        pygame.display.set_caption(Sylia.title, Sylia.title)
+        pygame.display.set_icon(Sylia.icon)
 
         # Init RenderObject
         RenderObject.init(Sylia.surface)
@@ -116,7 +123,7 @@ class Sylia:
 
         commands = "\n".join(lines)
 
-        exec(commands)
+        exec(commands, globals(), globals())
         exec("sys.exit(0)")
 
     def run():
@@ -148,11 +155,21 @@ class Clock:
 
 
 class Sound:
-    pygame.mixer.set_num_channels(8)
+    max_channels = 16
+    pygame.mixer.set_num_channels(16)
 
     def load(soundfile):
         file_location = "{}".format(soundfile)
         return pygame.mixer.Sound(file_location)
+
+    def stop(channel_number):
+        channel = pygame.mixer.Channel(channel_number)
+        channel.stop()
+
+    def stopAll():
+        for i in range(Sound.max_channels):
+            channel = pygame.mixer.Channel(i)
+            channel.stop()
 
     def play(sound, channel_number=1):
         channel = pygame.mixer.Channel(channel_number)
@@ -202,8 +219,21 @@ class Mouse:
     def position():
         return pygame.mouse.get_pos()
 
-def init(screenSize):
-    Sylia.init(screenSize)
+def isPower2(n):
+    return (n != 0) and (n & (n-1) == 0)
+
+def init(screenSize, title="Sylia App", icon=None):
+    if(icon == None):
+        dirname = os.path.dirname(__file__)
+        icon = dirname + '\sylia.png'
+    
+    image = pygame.image.load(icon)
+    w = image.get_width()
+    h = image.get_height()
+
+    if(w != h or not isPower2(w)):
+        raise Exception("Error: icon image must have equal dimensions that are a power of 2! ie 32x32, 64*64, 128x128, 256x256 ect...")
+    Sylia.init(screenSize, title, image)
 
 def running():
     sylia.clock.delay()
@@ -211,6 +241,28 @@ def running():
 
 def setBackgroundColour(colour):
     Sylia.background_colour = colour
+
+def screenWidth():
+    return Sylia.width
+
+def screenHeight():
+    return Sylia.height
+
+def screenCenter():
+    return [Sylia.width/2, Sylia.height/2]
+
+def draw(drawable):
+
+    if(isinstance(drawable, (Shape.Rectangle, Shape.Triangle, Shape.Circle))):
+        renderobject = drawable.renderObject
+    else:
+        renderobject = drawable
+
+    Sylia.drawLock.acquire()
+    if(renderobject.id not in Sylia.draw_list.keys()):
+        Sylia.draw_list[renderobject.id] = renderobject
+    Sylia.drawLock.release()
+
 
 #Dummy Class
 class sylia:
@@ -225,3 +277,7 @@ class sylia:
     mouse = Mouse
     running = running
     setBackgroundColour = setBackgroundColour
+    screenWidth = screenWidth
+    screenHeight = screenHeight
+    screenCenter = screenCenter
+    draw = draw

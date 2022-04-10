@@ -19,11 +19,3 @@ class Image:
         rect = image.get_rect()
         renderobject = RenderObject(image, rect, imgfile)
         return renderobject
-
-    """Public draw function, adds to list for Sylia to draw"""
-    def draw(renderobject):
-
-        Image.drawLock.acquire()
-        if(renderobject.id not in Image.drawList.keys()):
-            Image.drawList[renderobject.id] = renderobject
-        Image.drawLock.release()

@@ -89,6 +89,9 @@ class Shape:
             self.translate(zpoints)
             self.points = list(zpoints)
 
+        def setColour(self, colour):
+            self.colour = colour
+
         def draw(self):
             pygame.draw.polygon(Shape.surface, self.colour, self.points)
 
@@ -105,6 +108,9 @@ class Shape:
         def setPosition(self, position):
             self.position = position
 
+        def setColour(self, colour):
+            self.colour = colour
+
         def draw(self):
             pygame.draw.circle(Shape.surface, self.colour, self.position, radius=self.diameter/2)
 
@@ -115,6 +121,7 @@ class Shape:
             self.colour = colour
             self.extend = [0, 0, 0]
             self.scale = 1
+            self.renderObject = RenderObject(self, None, 'primative-circle', True)
 
             r = radius
             x = position[0]
@@ -156,6 +163,9 @@ class Shape:
             else:
                 raise Exception("Error: setExtend expects side argument for rectangle to be: 'left', 'right' or 'top'. {} is not a side".format(side))
 
+        def setColour(self, colour):
+            self.colour = colour
+
     # This is called internally
     def init(surface, drawLock, drawList):
         Shape.surface = surface
@@ -170,13 +180,6 @@ class Shape:
         round_thing = Shape.Circle(position, diameter, colour)
         return round_thing
 
-    def polygon(points, colour):
-        pygame.draw.polygon(Shape.surface, colour, points=points)
-
-        """Public draw function, adds to list for Sylia to draw"""
-    def draw(primativeObject):
-        renderobject = primativeObject.renderObject
-        Shape.drawLock.acquire()
-        if(renderobject.id not in Shape.drawList.keys()):
-            Shape.drawList[renderobject.id] = renderobject
-        Shape.drawLock.release()
+    def triangle(position, radius, colour):
+        pointy_thing = Shape.Triangle(position, radius, colour)
+        return pointy_thing

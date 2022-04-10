@@ -33,7 +33,7 @@ class Text:
         return font
 
     # Creates text element, takes a font and size as an argument
-    def create(fontName, size, text, position, colour=(0, 0, 0), anti_alias=False, fontFile=None):
+    def create(fontName, size, text, position, colour=(0, 0, 0), anti_alias=True, fontFile=None):
 
         font = Text.__loadFont(fontName, size, fontFile)
         textObj = font.render(text, anti_alias, colour)
@@ -41,11 +41,3 @@ class Text:
         renderobject = RenderObject(textObj, rect, text)
         renderobject.setPosition(position)
         return renderobject
-
-    """Public draw function, adds to list for Sylia to draw"""
-    def draw(renderobject):
-
-        Text.drawLock.acquire()
-        if(renderobject.id not in Text.drawList.keys()):
-            Text.drawList[renderobject.id] = renderobject
-        Text.drawLock.release()

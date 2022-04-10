@@ -1,4 +1,4 @@
-from .sylia import Clock as clock, init
+from .sylia import Clock as clock, init, screenWidth, screenHeight, screenCenter, draw
 from .sylia import Sound as sound, Key as key, Mouse as mouse, running, setBackgroundColour
 
 from .image import Image as image
