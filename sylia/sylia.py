@@ -1,3 +1,4 @@
+import traceback
 import pygame, math, threading, sys, os
 from sylia.renderobject import RenderObject
 from sylia.shapes import Shape
@@ -123,7 +124,24 @@ class Sylia:
 
         commands = "\n".join(lines)
 
-        exec(commands, globals(), globals())
+        try:
+            exec(commands, globals(), globals())
+        except SyntaxError as e:
+            error_class = e.__class__.__name__
+            detail = e.args[0]
+            line_num =  e.lineno
+            Sylia._running = False
+        except Exception as e:
+            error_class = e.__class__.__name__
+            detail = e.args[0]
+            _, __, exception_traceback = sys.exc_info()
+            line_num =  traceback.extract_tb(exception_traceback)[-1][1]
+            Sylia._running = False
+        else:
+            exec("sys.exit(0)")
+            return
+        raise Exception("{} at line {} of gamethread: {}".format(error_class, line_num, detail))
+
         exec("sys.exit(0)")
 
     def run():

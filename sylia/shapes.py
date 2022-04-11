@@ -14,7 +14,7 @@ class Shape:
             y = position[1]
             w = dimensions[0]/2
             h = dimensions[1]/2
-            self.position = position
+            self.position = list(position)
             self.dimensions = dimensions
             self.scale = [1, 1] #Scale the shape in both directions
             self.extend = [0, 0, 0, 0] #Extend a particular face in that direction
@@ -45,12 +45,13 @@ class Shape:
                points[i][1] += self.position[1]
 
         def setPosition(self, position):
-           offset = [position[0] - self.position[0], position[1] - self.position[1]]
-           self.position = position
+            position = list(position)
+            offset = [position[0] - self.position[0], position[1] - self.position[1]]
+            self.position = position
 
-           for i in range(len(self.points)):
-               self.points[i][0] += offset[0]
-               self.points[i][1] += offset[1]
+            for i in range(len(self.points)):
+                self.points[i][0] += offset[0]
+                self.points[i][1] += offset[1]
 
         def setScale(self, dimensions):
             self.scale = [dimensions[0]/self.dimensions[0], dimensions[1]/self.dimensions[1]]
@@ -97,7 +98,7 @@ class Shape:
 
     class Circle:
         def __init__(self, position, diameter, colour):
-            self.position = position
+            self.position = list(position)
             self.colour = colour
             self.diameter = diameter
             self.renderObject = RenderObject(self, None, 'primative-circle', True)
@@ -106,7 +107,7 @@ class Shape:
             self.diameter = diameter
 
         def setPosition(self, position):
-            self.position = position
+            self.position = list(position)
 
         def setColour(self, colour):
             self.colour = colour
