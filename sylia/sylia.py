@@ -1,7 +1,7 @@
 import traceback
 import pygame, math, threading, sys, os
 from sylia.renderobject import RenderObject
-from sylia.shapes import Shape
+from sylia.shape import Shape
 from sylia.image import Image
 from sylia.text import Text
 from sylia.duck import Duck
@@ -119,28 +119,20 @@ class Sylia:
         lines = []
 
         for line in f:
-            if not (('import' in line and 'sylia' in line) or 'sylia.init' in line):
+            if not ('sylia.init' in line):
                 lines.append(line)
+            else:
+                lines.append("\n")
 
-        commands = "\n".join(lines)
+        #This now seems to work... reporting the correct error lines... for now
+        if(not os.path.exists('__pycache__')):
+            os.mkdir('__pycache__')
 
-        try:
-            exec(commands, globals(), globals())
-        except SyntaxError as e:
-            error_class = e.__class__.__name__
-            detail = e.args[0]
-            line_num =  e.lineno
-            Sylia._running = False
-        except Exception as e:
-            error_class = e.__class__.__name__
-            detail = e.args[0]
-            _, __, exception_traceback = sys.exc_info()
-            line_num =  traceback.extract_tb(exception_traceback)[-1][1]
-            Sylia._running = False
-        else:
-            exec("sys.exit(0)")
-            return
-        raise Exception("{} at line {} of gamethread: {}".format(error_class, line_num, detail))
+        with open('__pycache__/file.py', 'w') as FILE:
+            FILE.writelines(lines)
+        
+        with open('__pycache__/file.py', 'r') as FILE:
+            exec(FILE.read(), globals(), globals())
 
         exec("sys.exit(0)")
 
@@ -162,6 +154,31 @@ class Sylia:
             Duck.syncLock.release()
 
         pygame.quit()
+
+class Screen:
+    def width():
+        return Sylia.width
+
+    def height():
+        return Sylia.height
+
+    def center():
+        return [Sylia.width/2, Sylia.height/2]
+
+    def colour(colour):
+        Sylia.background_colour = colour
+
+    def draw(drawable):
+        if(isinstance(drawable, (Shape.Rectangle, Shape.Triangle, Shape.Circle))):
+            renderobject = drawable.renderObject
+        else:
+            renderobject = drawable
+
+        Sylia.drawLock.acquire()
+        if(renderobject.id not in Sylia.draw_list.keys()):
+            Sylia.draw_list[renderobject.id] = renderobject
+        Sylia.drawLock.release()
+
 
 class Clock:
 
@@ -243,7 +260,7 @@ def isPower2(n):
 def init(screenSize, title="Sylia App", icon=None):
     if(icon == None):
         dirname = os.path.dirname(__file__)
-        icon = dirname + '\sylia.png'
+        icon = os.path.join(dirname, 'sylia.png')
     
     image = pygame.image.load(icon)
     w = image.get_width()
@@ -257,30 +274,6 @@ def running():
     sylia.clock.delay()
     return Sylia._running
 
-def setBackgroundColour(colour):
-    Sylia.background_colour = colour
-
-def screenWidth():
-    return Sylia.width
-
-def screenHeight():
-    return Sylia.height
-
-def screenCenter():
-    return [Sylia.width/2, Sylia.height/2]
-
-def draw(drawable):
-
-    if(isinstance(drawable, (Shape.Rectangle, Shape.Triangle, Shape.Circle))):
-        renderobject = drawable.renderObject
-    else:
-        renderobject = drawable
-
-    Sylia.drawLock.acquire()
-    if(renderobject.id not in Sylia.draw_list.keys()):
-        Sylia.draw_list[renderobject.id] = renderobject
-    Sylia.drawLock.release()
-
 
 #Dummy Class
 class sylia:
@@ -293,9 +286,6 @@ class sylia:
     sound = Sound
     key = Key
     mouse = Mouse
+    screen = Screen
     running = running
-    setBackgroundColour = setBackgroundColour
-    screenWidth = screenWidth
-    screenHeight = screenHeight
-    screenCenter = screenCenter
-    draw = draw
+    init = init

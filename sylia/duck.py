@@ -3,7 +3,7 @@ import threading
 import math
 import sys
 from copy import deepcopy
-from sylia.shapes import Shape
+from sylia.shape import Shape
 
 class Duck:
 
