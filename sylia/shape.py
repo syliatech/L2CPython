@@ -46,20 +46,10 @@ class Shape:
 
         def setPosition(self, position):
             position = list(position)
-            offset = [position[0] - self.position[0], position[1] - self.position[1]]
             self.position = position
 
-            for i in range(len(self.points)):
-                self.points[i][0] += offset[0]
-                self.points[i][1] += offset[1]
-
-        def setScale(self, dimensions):
-            self.scale = [dimensions[0]/self.dimensions[0], dimensions[1]/self.dimensions[1]]
+        def setSize(self, dimensions):
             self.dimensions = dimensions
-
-            for i in range(len(self.points)):
-                self.points[i][0] *= self.scale[0]
-                self.points[i][1] *= self.scale[1]
 
         def setExtended(self, side, amount):
             if(side == 'left'):
@@ -73,12 +63,10 @@ class Shape:
             else:
                 raise Exception("Error: setExtend expects side argument for rectangle to be: 'left', 'right', 'top' or 'bottom'. {} is not a side".format(side))
 
-            #Update everything
-            self.setAngle(self.angle)
-
-        def setAngle(self, angle):
+        def setRotation(self, angle):
             self.angle = math.radians(angle)
 
+        def __handle_transforms(self):
             zpoints = self.build_zero_shape()
 
             for i in range(len(self.points)):
@@ -94,6 +82,7 @@ class Shape:
             self.colour = colour
 
         def draw(self):
+            self.__handle_transforms()
             pygame.draw.polygon(Shape.surface, self.colour, self.points)
 
     class Circle:
@@ -116,15 +105,15 @@ class Shape:
             pygame.draw.circle(Shape.surface, self.colour, self.position, radius=self.diameter/2)
 
     class Triangle(Rectangle):
-        def __init__(self, position, radius, colour):
+        def __init__(self, position, size, colour):
             self.position = position
-            self.radius = radius
+            self.radius = size
             self.colour = colour
             self.extend = [0, 0, 0]
             self.scale = 1
             self.renderObject = RenderObject(self, None, 'primative-circle', True)
 
-            r = radius
+            r = size
             x = position[0]
             y = position[1]
             rx1 = r*math.cos(math.radians(210))
@@ -149,10 +138,8 @@ class Shape:
 
             return [[x, y+r+ext], [x+rx1, y+ry1], [x+rx2, y+ry2]]
 
-        def setScale(self, scale):
-            self.radius = self.radius*(scale/self.scale)
-
-            self.setAngle(self.angle)
+        def setSize(self, size):
+            self.radius = size
 
         def setExtended(self, side, amount):
             if(side == "top"):
