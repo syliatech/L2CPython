@@ -275,7 +275,7 @@ class Duck:
                 Duck.angle += Duck.target[1]*Duck.speed
                 Duck.index += Duck.speed
 
-                Duck.rect.setAngle(Duck.angle)
+                Duck.rect.setRotation(Duck.angle)
 
                 if(Duck.index >= abs(Duck.target[2])):
                     Duck.current_command = None
