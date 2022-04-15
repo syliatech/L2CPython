@@ -219,7 +219,7 @@ class Duck:
     def init(surface, position, running):
         Duck.surface = surface
         Duck.position = position
-        Duck.start_position = position
+        Duck.start_position = list(position)
         Duck.running = running
         Duck.rect = Shape.rectangle(list(Duck.position), [50, 50], (255, 255, 0))
         Duck.nose = Shape.rectangle(list(Duck.position), [0, 10], (255, 150, 0))
@@ -319,7 +319,7 @@ class Duck:
         return Duck.position[1]
 
     def reset():
-        Duck.position = Duck.start_position
+        Duck.position = list(Duck.start_position)
 
     """Add move to list of commands for duck to follow"""
     def move(distance):
@@ -438,7 +438,7 @@ class Mouse:
 def isPower2(n):
     return (n != 0) and (n & (n-1) == 0)
 
-def init(screenSize, title="Sylia App", icon=None):
+def init(screenSize=[800, 600], title="Sylia App", icon=None):
     if(icon == None):
         dirname = os.path.dirname(__file__)
         icon = os.path.join(dirname, 'sylia.png')
