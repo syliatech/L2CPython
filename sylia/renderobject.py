@@ -40,8 +40,8 @@ class RenderObject:
         # Check if image is scaled (otherwise do not scale)  
         if(self.size):
             image = pygame.transform.scale(self.image, (int(self.rect.width*self.size[0]), int(self.rect.height*self.size[1])))
-            image = pygame.transform.rotate(image, -self.angle)
+            image = pygame.transform.rotate(image, self.angle)
         else:
-            image = pygame.transform.rotate(self.image, -self.angle)
+            image = pygame.transform.rotate(self.image, self.angle)
         rect = image.get_rect(center=self.rect.center)
         RenderObject.surface.blit(image, rect)

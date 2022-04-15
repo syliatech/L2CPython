@@ -184,6 +184,8 @@ class Duck:
     position = None
     sprite = None #pygame.image.load("Resources\Images\yellow_ducky.png")
     rect = None
+    eyes = None
+    nose = None
     visible = False
     angle = 0
     speed = 5
@@ -220,6 +222,8 @@ class Duck:
         Duck.start_position = position
         Duck.running = running
         Duck.rect = Shape.rectangle(list(Duck.position), [50, 50], (255, 255, 0))
+        Duck.nose = Shape.rectangle(list(Duck.position), [0, 10], (255, 150, 0))
+        Duck.nose.setExtended('right', 25)
 
     """Internally called each tick to update the duck"""
     def update():
@@ -264,6 +268,7 @@ class Duck:
                 Duck.index += Duck.speed
 
                 Duck.rect.setPosition(list(Duck.position))
+                Duck.nose.setPosition(list(Duck.position))
 
                 if(Duck.index >= abs(Duck.target[2])):
                     Duck.current_command = None
@@ -276,6 +281,7 @@ class Duck:
                 Duck.index += Duck.speed
 
                 Duck.rect.setRotation(Duck.angle)
+                Duck.nose.setRotation(Duck.angle)
 
                 if(Duck.index >= abs(Duck.target[2])):
                     Duck.current_command = None
@@ -304,6 +310,7 @@ class Duck:
 
                 else:
                     Screen.draw(Duck.rect)
+                    Screen.draw(Duck.nose)
                     
     def getPosX():
         return Duck.position[0]

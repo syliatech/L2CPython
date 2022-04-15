@@ -64,7 +64,7 @@ class Shape:
                 raise Exception("Error: setExtend expects side argument for rectangle to be: 'left', 'right', 'top' or 'bottom'. {} is not a side".format(side))
 
         def setRotation(self, angle):
-            self.angle = math.radians(angle)
+            self.angle = -math.radians(angle)
 
         def __handle_transforms(self):
             zpoints = self.build_zero_shape()
@@ -72,8 +72,8 @@ class Shape:
             for i in range(len(self.points)):
                 x1 = zpoints[i][0]
                 y1 = zpoints[i][1]
-                zpoints[i][0] = (math.cos(self.angle)*x1) - (math.sin(self.angle)*y1)
-                zpoints[i][1] = (math.sin(self.angle)*x1) + (math.cos(self.angle)*y1)
+                zpoints[i][0] = (math.cos(self.angle)*x1) + (math.sin(self.angle)*y1)
+                zpoints[i][1] = (math.sin(self.angle)*x1) - (math.cos(self.angle)*y1)
 
             self.translate(zpoints)
             self.points = list(zpoints)
@@ -111,6 +111,7 @@ class Shape:
             self.colour = colour
             self.extend = [0, 0, 0]
             self.scale = 1
+            self.angle = 0
             self.renderObject = RenderObject(self, None, 'primative-circle', True)
 
             r = size
