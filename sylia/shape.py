@@ -56,9 +56,9 @@ class Shape:
                 self.extend[0] = amount
             elif(side == 'right'):
                 self.extend[1] = amount
-            elif(side == 'top'):
-                self.extend[2] = amount
             elif(side == 'bottom'):
+                self.extend[2] = amount
+            elif(side == 'top'):
                 self.extend[3] = amount
             else:
                 raise Exception("Error: setExtend expects side argument for rectangle to be: 'left', 'right', 'top' or 'bottom'. {} is not a side".format(side))
